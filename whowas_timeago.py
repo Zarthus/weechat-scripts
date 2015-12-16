@@ -183,7 +183,7 @@ def fmt_time(timestamp):
     if not then:
         return False
 
-    diff = datetime.datetime.now() - parse_timestamp(timestamp)
+    diff = datetime.datetime.now() - then
     data = []
 
     hrdiff = diff.seconds / 3600
