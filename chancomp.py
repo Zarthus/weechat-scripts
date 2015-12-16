@@ -310,8 +310,8 @@ def create_whois_regex_from_isupport(server):
 def fmt_nick(nick):
     """Format nick in colours for output colouring"""
 
-    green = w.color('green')
-    reset = w.color('reset')
+    green = w.color("green")
+    reset = w.color("reset")
     nick_col = w.color(w.info_get("irc_nick_color_name", nick))
 
     return "{}[{}{}{}]{}".format(green, nick_col, nick, green, reset)

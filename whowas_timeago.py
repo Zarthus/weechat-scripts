@@ -38,7 +38,6 @@
 # Where time is a short formatted string like so:
 #   1 day, 5 hours
 #   5 hours, 15 minutes
-#   12 minutes, 43 seconds
 #   and so on..
 #
 # Script options:
@@ -74,7 +73,7 @@ SCRIPT_VERSION = "1.0"
 SCRIPT_LICENSE = "MIT"
 SCRIPT_DESC = "Display a human-readable time string for WHOWAS data"
 
-PARSE_TIMESTAMP_REGEXP = re.compile('^\w{3} (\w{3}) (\d{1,2}) (\d{2}):(\d{2}):(\d{2}) (\d{4})$')
+PARSE_TIMESTAMP_REGEXP = re.compile("^\w{3} (\w{3}) (\d{1,2}) (\d{2}):(\d{2}):(\d{2}) (\d{4})$")
 
 
 def whowas_callback_timestamp(data, signal, signal_data):
@@ -170,8 +169,8 @@ def parse_month(month):
 def fmt_nick(nick):
     """Format nick in colours for output colouring"""
 
-    green = w.color('green')
-    reset = w.color('reset')
+    green = w.color("green")
+    reset = w.color("reset")
     nick_col = w.color(w.info_get("irc_nick_color_name", nick))
 
     return "{}[{}{}{}]{}".format(green, nick_col, nick, green, reset)
@@ -204,7 +203,7 @@ def fmt_time(timestamp):
 
 if import_ok and w.register(SCRIPT_NAME, SCRIPT_AUTHOR, SCRIPT_VERSION, SCRIPT_LICENSE, SCRIPT_DESC, "", ""):
     settings = {
-        "show_errors": ["true", "Display error messages when timestamp cannot be parsed."]
+        "show_errors": ["true", "Display error messages when timestamp cannot be parsed. true or false"]
     }
 
     for option, default_value in settings.items():
