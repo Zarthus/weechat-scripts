@@ -6,6 +6,9 @@ This repository contains all my WeeChat scripts.
   - Compares channels with a different user via WHOIS and returns the number
     of channels being shared between the two.
 
+- [whowas_timeago.py](whowas_timeago.py)
+  - Extract the date from WHOWAS and inform the user of how long ago this roughly was.
+
 ## Installation
 
 Copy the file source in to `~/.weechat/{script_language}/` and run `/script load {script_name}.extension`
