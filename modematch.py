@@ -273,9 +273,9 @@ def print_matches(target, matches, data):  # TODO: Function is too complex.
         col = w.color(w.info_get("irc_nick_color_name", data["setter"]))
         pf = fmt_prefix(data).replace("_target_", "")
 
-        w.prnt(target, "{}\tThe following nicks match {} {} by {}{}{}".format(pf, fmt_banmask(data["mask"]),
-                                                                              fmt_mode_char(data["mode"]), col, 
-                                                                              data["setter"], w.color("reset")))
+        w.prnt(target, "{}\tThe following nicks match {}, {} by {}{}{}".format(pf, fmt_banmask(data["mask"]),
+                                                                               fmt_mode_char(data["mode"]), col, 
+                                                                               data["setter"], w.color("reset")))
 
 
         nicks = []
