@@ -58,6 +58,12 @@
 # History:
 #  version 1.0 - 2015-12-16
 #    Script creation
+#  version 1.1 - 2015-12-19
+#    WHOIS shares the same numeric as WHOWAS uses, and returns different data.
+#    This issue has been fixed by defaulting show_errors to false, and displaying extra
+#    notices.
+#  version 1.2 - 2015-12-19
+#    The WHOWAS data is in the UTC timezone, but not everyone is. Ensure we get utctime()
 
 try:
     import weechat as w

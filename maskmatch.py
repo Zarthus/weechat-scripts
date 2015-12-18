@@ -114,7 +114,7 @@
 # It probably runs on earlier versions of WeeChat, but has not been tested.
 #
 # History:
-#  version 1.0 - 2015-12-16
+#  version 1.0 - 2015-12-19
 #    Script creation
 
 try:
