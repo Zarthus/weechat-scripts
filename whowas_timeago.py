@@ -49,7 +49,7 @@
 #     Servers send both numeric 312 on WHOIS and WHOWAS, but they return different things.
 #     This often is a cause of an error on WHOIS, and will get noisy very quickly. But this
 #     option becomes useful when you're not getting feedback when it was on a WHOWAS.
-#   
+#
 #     Errors are noisy, but easy to fix once known.
 #
 # This script functions on WeeChat 1.3 and above, supporting both Python 2 and Python 3.
@@ -84,12 +84,12 @@ def whowas_callback_timestamp(data, signal, signal_data):
     """When the WHOWAS date numeric comes by"""
 
     parsed = w.info_get_hashtable("irc_message_parse", {"message": signal_data})
-    
+
     server = signal.split(",")[0]
     nick = parsed["arguments"].split(" ")[1]
     timestamp = parsed["arguments"].split(":", 1)[1]
     buff = find_target_buffer(server, nick)
-    
+
     n = fmt_nick(nick)
     t = fmt_time(timestamp)
 
@@ -119,7 +119,7 @@ def find_target_buffer(server, nick):
     opt = w.config_string(w.config_get("irc.msgbuffer.whowas"))
     if not opt:
         opt = w.config_string(w.config_get("irc.look.msgbuffer_fallback"))
-    
+
     target = ""
 
     if opt.lower() in targets:
@@ -131,7 +131,7 @@ def find_target_buffer(server, nick):
 def parse_timestamp(timestamp):
     """
     Interpret a string that represents time into a manipulatable object
-    
+
     Timestamp string looks like this:
       Wed Dec 16 03:06:23 2015
     Tested on the following ircds:
@@ -140,12 +140,12 @@ def parse_timestamp(timestamp):
       inspircd
       hybrid
     """
-    
+
     m = PARSE_TIMESTAMP_REGEXP.match(timestamp)
 
     if not m:
         return False
-    
+
     month_s, day, hours, mins, secs, year = m.groups()
     month = parse_month(month_s)
 
@@ -154,7 +154,7 @@ def parse_timestamp(timestamp):
 
 def parse_month(month):
     """Read the string month returned by the ircd and convert it to a number"""
-    
+
     months = {
       "Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4,
       "May": 5, "Jun": 6, "Jul": 7, "Aug": 8,
