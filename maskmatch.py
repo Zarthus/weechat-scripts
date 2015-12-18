@@ -28,6 +28,10 @@
 # script compares the mask to anyone in the current channel to see if it matches 
 # anyone, and lists them accordingly.
 #
+# This script comes with a command (/maskmatch <hostname>) to perform a match
+# before you perform a ban or quiet on anyone, and as well has partial extban support
+# in the form of recognizing account names with $a:accountname and $~a
+#
 # Script options:
 #   whitelist, blacklist (default: "", options: see description)
 #     The whitelist supports multiple types of arguments. Primarily a server, 
@@ -60,7 +64,7 @@
 #     The script will not show matches when both options are set to false.
 #  
 #   matching_modes (default: beIq, options: list of mode characters)
-#     List of modes that have a hostmask parameter. In version 1.0, modematch does
+#     List of modes that have a hostmask parameter. In version 1.0, maskmatch does
 #     not read the server's isupport to see which modes have parameters to them.
 #     
 #     Because it does not do this, problems may occur if you are on a network that, for example,
@@ -77,7 +81,7 @@
 #     will be assumed upon the brackets, rather than the prefix itself.
 #
 #     Special options:
-#       _script_name_    - Gets converted into SCRIPT_NAME, which would be modematch
+#       _script_name_    - Gets converted into SCRIPT_NAME, which would be maskmatch
 #       _prefix_network_ - The option you have set in weechat.look.prefix_network
 #       _setter_         - The person whom set the mode
 #       _target_         - The person whom the mode was set on. This is their nick, not the hostmask
@@ -113,12 +117,23 @@ except ImportError:
     import_ok = False
 
 
-SCRIPT_NAME = "modematch"
+SCRIPT_NAME = "maskmatch"
 SCRIPT_AUTHOR = "Zarthus <zarthus@zarth.us>"
 SCRIPT_VERSION = "1.0"
 SCRIPT_LICENSE = "MIT"
 SCRIPT_DESC = "Display who got banned (quieted, excepted, etc.) when a mode with a hostmask argument is set"
+SCRIPT_COMMAND = "maskmatch"
 
+
+def cmd_maskmatch(data, buffer, mask):
+    """Trigger for /maskmatch <hostmask>"""
+
+    server, channel = w.buffer_get_string(buffer, "name").split(".", 1)
+    matches = match_against_nicklist(server, channel, mask)
+    
+    print_matches(buffer, matches, {"setter": "maskmatch", "mode": "special", "set": True, "mask": mask})
+
+    return w.WEECHAT_RC_OK
 
 def on_channel_mode(data, signal, signal_data):
     """Whenever a channel mode is set."""
@@ -248,74 +263,95 @@ def is_mask_ignored(mask):
 def match_against_nicklist(server, channel, hostmask):
     """Compare the hostmask against all users in the channel"""
 
-    infolist = w.infolist_get("irc_nick", "", "{},{}".format(server,channel))
+    infolist = w.infolist_get("irc_nick", "", "{},{}".format(server, channel))
     
-    field = "account" if "$a:" in hostmask else "host"
+    if "$a:" in hostmask or "$~a" in hostmask:
+        field = "account"
+    else:
+        field = "host"
+
     matches = []
 
     while w.infolist_next(infolist):
         name = w.infolist_string(infolist, "name")
-        host = name + "!" + w.infolist_string(infolist, field)
-
-        if w.string_match(host, hostmask, 0):
+        
+        if field == "host":
+            host = name + "!" + w.infolist_string(infolist, field)
+        else:
+            host = w.infolist_string(infolist, field)
+        
+        if (hostmask == "$~a" and host == "*") or (field != "$~a" and w.string_match(host, hostmask.replace("$a:", ""), 0)):
             matches.append(name)
 
     w.infolist_free(infolist)
     return matches 
 
 
-def print_matches(target, matches, data):  # TODO: Function is too complex.
+def print_matches(target, matches, data):
     """Print all matching masks to the target channel"""
 
+    verbose = w.config_get_plugin("verbose") in ["true", "yes"]
     limit = int(w.config_get_plugin("limit"))
 
-    if w.config_get_plugin("print_as_list") in ["true", "yes"]:
-        col = w.color(w.info_get("irc_nick_color_name", data["setter"]))
-        pf = fmt_prefix(data).replace("_target_", "")
-
-        w.prnt(target, "{}\tThe following nicks match {}, {} by {}{}{}".format(pf, fmt_banmask(data["mask"]),
-                                                                               fmt_mode_char(data["mode"]), col, 
-                                                                               data["setter"], w.color("reset")))
-
-
-        nicks = []
-        remainder = len(matches) - limit
-        i = 0
-        for name in matches:
-            nicks.append("{}{}{}".format(w.color(w.info_get("irc_nick_color_name", name)), name, w.color("reset")))
-            i += 1
-
-            if i >= limit:
-                break
-
-        if remainder > 0:
-            w.prnt(target, ", ".join(nicks) + ", and {} more..".format(remainder))
-        else:
-            w.prnt(target, ", ".join(nicks))
-        return
-
-    prefix = fmt_prefix(data)
-    target_in_prefix = "_target_" in prefix
-
-    verbose = w.config_get_plugin("verbose") in ["true", "yes"]
-
-    total = len(matches)
-    if total == 0:
-        if verbose:
-            w.prnt(target, "{}\tno matches found".format(prefix))
-        return
-
-    i = 0
     if limit < 1:
         limit = 1
 
+    total = len(matches)
+    if total == 0:
+        if verbose or data["mode"] == "special":
+            w.prnt(target, "{}\tNo matches for {}".format(fmt_prefix(data).replace("_target_", ""), fmt_banmask(data["mask"])))
+        return
+
+    if w.config_get_plugin("print_as_list") in ["true", "yes"]:
+        print_as_list(target, matches, data, limit, total)
+    else:
+        print_as_lines(target, matches, data, limit, total)
+        
+def print_as_list(target, matches, data, limit, total):
+    """Prints the output as a comma-separated list of nicks."""
+
+    col = w.color(w.info_get("irc_nick_color_name", data["setter"]))
+    pf = fmt_prefix(data).replace("_target_", "")
+
+    s = "{}\tThe following {} {}"
+    if data["mode"] == "special":
+        w.prnt(target, s.format(pf, "nick matches" if total == 1 else "nicks match", fmt_banmask(data["mask"])))
+    else:
+        w.prnt(target, s + ", {} by {}{}{}".format(
+           pf, "nick matches" if total == 1 else "nicks match",
+           fmt_banmask(data["mask"]), fmt_mode_char(data["mode"]), col, 
+           data["setter"], w.color("reset")
+        ))
+
+    nicks = []
+    remainder = len(matches) - limit
+    i = 0
+    for name in matches:
+       nicks.append("{}{}{}".format(w.color(w.info_get("irc_nick_color_name", name)), name, w.color("reset")))
+       i += 1
+
+       if i >= limit:
+           break
+
+    if remainder > 0:
+        w.prnt(target, ", ".join(nicks) + ", and {} more..".format(remainder))
+    else:
+        w.prnt(target, ", ".join(nicks))
+
+def print_as_lines(target, matches, data, limit, total):
+    """Prints the output as a line-separated list of nicks."""
+
+    prefix = fmt_prefix(data)
     mstring = "{}{}".format(fmt_mode_char(data["mode"]), "" if data["set"] else " removal")
     mask = fmt_banmask(data["mask"])
+    target_in_prefix = "_target_" in prefix
+    i = 0
 
     for name in matches:
         if target_in_prefix:
-            pf = prefix.replace("_target_", "{}{}{}".format(w.color(w.info_get("irc_nick_color_name", name)), 
-                                                            name, w.color("reset")))
+            pf = prefix.replace("_target_", "{}{}{}".format(
+                w.color(w.info_get("irc_nick_color_name", name)), 
+                name, w.color("reset")))
         else:
             pf = prefix
 
@@ -332,7 +368,7 @@ def print_matches(target, matches, data):  # TODO: Function is too complex.
             w.prnt(target, "{}\t{} {} matches {}".format(pf, mstring, mask, fmt_nick(name)))
         i += 1
 
-
+  
 def fmt_banmask(mask):
     """Formats a banmask"""
 
@@ -349,7 +385,8 @@ def fmt_mode_char(char):
         "b": "ban",
         "e": "ban exception",
         "q": "quiet",
-        "I": "invite exception"
+        "I": "invite exception",
+        "special": "testing hostmask"
     }
     
     if char in chars:
@@ -412,4 +449,12 @@ if import_ok and w.register(SCRIPT_NAME, SCRIPT_AUTHOR, SCRIPT_VERSION, SCRIPT_L
             w.config_set_plugin(option, default_value[0])
             w.config_set_desc_plugin(option, default_value[1])
 
+    w.hook_command(
+        SCRIPT_COMMAND,
+        ("Compare a hostmask against the active channel to see how much people it would affect."),
+        "<hostmask>", "Hostmask to compare against.",
+        "", "cmd_maskmatch", ""
+    )
+
     w.hook_signal("*,irc_in_MODE", "on_channel_mode", "")
+
