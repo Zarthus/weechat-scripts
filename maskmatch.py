@@ -103,6 +103,10 @@
 #     This formatting is more compact, and will consume less space. But may as direct
 #     result be less readable for larger limits.
 #
+#   sorting (default: alpha_ignore_case, options: none, alpha, alpha_ignore_case)
+#     Sort matches by their name - either alphabetically, alphabetically with case insensitivity,
+#     or none at all.
+#
 #   verbose (default: false, options: true, false)
 #     When verbose is on, you will be informed when there aren't any matches found.
 #
@@ -310,6 +314,12 @@ def print_matches(target, matches, data):
             w.prnt(target, "{}\tNo matches for {}".format(fmt_prefix(data).replace("_target_", ""), fmt_banmask(data["mask"])))
         return
 
+    sorting = w.config_get_plugin("sorting")
+    if sorting == "alpha":
+       matches = sorted(matches)
+    elif sorting == "alpha_ignore_case":
+       matches = sorted(matches, key=str.lower)
+
     if w.config_get_plugin("print_as_list") in ["true", "yes"]:
         print_as_list(target, matches, data, limit, total)
     else:
@@ -449,6 +459,7 @@ if import_ok and w.register(SCRIPT_NAME, SCRIPT_AUTHOR, SCRIPT_VERSION, SCRIPT_L
         "prefix": ["_script_name_", "The name the script will have. Special options: _script_name_, _prefix_network_, _setter_, _target_"],
         "prefix_color": ["green", "The colour the prefix will have. If prefix is wrapped in brackets, the brackets will have this color. Any weechat-supported color"],
         "print_as_list": ["false", "Print as one large list, less information - but can fit more names at cost of readability. Boolean"],
+        "sorting": ["alpha_ignore_case", "Sort names alphabetically or not. none, alpha, or alpha_ignore_case"],
         "verbose": ["false", "Print also if no matches are found. Boolean"],
         "whitelist": ["", "List of servers, channels, or server.channel combinations this should be done for. Comma separated string"]
    }
