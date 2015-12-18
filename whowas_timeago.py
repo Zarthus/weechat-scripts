@@ -73,7 +73,7 @@ import re
 
 SCRIPT_NAME = "whowas_timeago"
 SCRIPT_AUTHOR = "Zarthus <zarthus@zarth.us>"
-SCRIPT_VERSION = "1.1"
+SCRIPT_VERSION = "1.2"
 SCRIPT_LICENSE = "MIT"
 SCRIPT_DESC = "Display a human-readable time string for WHOWAS data"
 
@@ -167,7 +167,7 @@ def parse_month(month):
             w.prnt("", "error: Please report this issue to the maintainer of the {} script.".format(SCRIPT_NAME))
             w.prnt("", "error: You can turn this notice off by setting `show_errors' to false.")
 
-        return int(datetime.datetime.now().strftime("%m"))
+        return int(datetime.datetime.utcnow().strftime("%m"))
 
     return months[month]
 
@@ -189,7 +189,7 @@ def fmt_time(timestamp):
     if not then:
         return False
 
-    diff = datetime.datetime.now() - then
+    diff = datetime.datetime.utcnow() - then
     data = []
 
     hrdiff = diff.seconds / 3600
@@ -203,7 +203,8 @@ def fmt_time(timestamp):
         data.append("{} minute{}".format(mdiff, "s" if mdiff != 1 else ""))
 
     if not data:
-        return "just seconds"  # IRCds will often have forgotten data past a week, so chances are it happened now.
+         # IRCds will often have forgotten data past a week, so chances are it happened now.
+         return str(diff.seconds) + " seconds"
     return ", ".join(data)
 
 
