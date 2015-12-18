@@ -41,11 +41,15 @@
 #   and so on..
 #
 # Script options:
-#   show_errors (default: true, options: true, false)
-#     Display script errors (most often caused by unsupported IRCds). Asking the user
+#   show_errors (default: false, options: true, false)
+#     Display script errors (most often caused by unsupported IRCds, and /WHOIS). Asking the user
 #     to please report the issue to the maintainer, along with informing how to turn
 #     this option off.
 #
+#     Servers send both numeric 312 on WHOIS and WHOWAS, but they return different things.
+#     This often is a cause of an error on WHOIS, and will get noisy very quickly. But this
+#     option becomes useful when you're not getting feedback when it was on a WHOWAS.
+#   
 #     Errors are noisy, but easy to fix once known.
 #
 # This script functions on WeeChat 1.3 and above, supporting both Python 2 and Python 3.
@@ -69,7 +73,7 @@ import re
 
 SCRIPT_NAME = "whowas_timeago"
 SCRIPT_AUTHOR = "Zarthus <zarthus@zarth.us>"
-SCRIPT_VERSION = "1.0"
+SCRIPT_VERSION = "1.1"
 SCRIPT_LICENSE = "MIT"
 SCRIPT_DESC = "Display a human-readable time string for WHOWAS data"
 
@@ -90,8 +94,10 @@ def whowas_callback_timestamp(data, signal, signal_data):
     t = fmt_time(timestamp)
 
     if not t:
+        # This was most likely a WHOIS, and contained the server description.
         if w.config_get_plugin("show_errors") in ["true", "yes", "on"]:
-            w.prnt(buff, "error: Failed to parse timestamp '{}' for {}.".format(timestamp, nick))
+            w.prnt(buff, ("error: Failed to parse timestamp '{}' for {}."
+                " You can neglect this error if this was a WHOIS request.").format(timestamp, nick))
             w.prnt(buff, "error: Please report this issue to the maintainer of the {} script.".format(SCRIPT_NAME))
             w.prnt(buff, "error: You can turn this notice off by setting `show_errors' to false.")
     else:
@@ -203,7 +209,7 @@ def fmt_time(timestamp):
 
 if import_ok and w.register(SCRIPT_NAME, SCRIPT_AUTHOR, SCRIPT_VERSION, SCRIPT_LICENSE, SCRIPT_DESC, "", ""):
     settings = {
-        "show_errors": ["true", "Display error messages when timestamp cannot be parsed. true or false"]
+        "show_errors": ["false", "Display error messages when timestamp cannot be parsed. true or false"]
     }
 
     for option, default_value in settings.items():
