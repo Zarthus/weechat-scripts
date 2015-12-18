@@ -2,8 +2,8 @@
 
 This repository contains all my WeeChat scripts.
 
-- [banmatch.py](banmatch.py)
-  - Whenever a ban is set, this script compares the mask to anyone in the current channel
+- [modematch.py](modematch.py)
+  - Whenever a mode with hostmask argument is set, this script compares the mask to anyone in the current channel
     to see if it matches anyone, and lists them accordingly.
 
 - [chancomp.py](chancomp.py)
