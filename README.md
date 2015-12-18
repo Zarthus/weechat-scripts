@@ -2,14 +2,14 @@
 
 This repository contains all my WeeChat scripts.
 
+- [chancomp.py](chancomp.py)
+  - Compares channels with a different user via WHOIS and returns the number
+    of channels being shared between the two.
+
 - [maskmatch.py](maskmatch.py)
   - Whenever a mode with hostmask argument is set, this script compares the mask to anyone in the current channel
     to see if it matches anyone, and lists them accordingly. Also allows you to compare people who would be affected
     by a ban with `/maskmatch <hostmask>`.
-
-- [chancomp.py](chancomp.py)
-  - Compares channels with a different user via WHOIS and returns the number
-    of channels being shared between the two.
 
 - [whowas_timeago.py](whowas_timeago.py)
   - Extract the date from WHOWAS and inform the user of how long ago this roughly was.
