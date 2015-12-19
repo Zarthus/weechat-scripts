@@ -116,6 +116,13 @@
 # History:
 #  version 1.0 - 2015-12-19
 #    Script creation
+#  version 1.1 - 2015-12-19
+#    cmd_maskmatch: Validate if existing buffer is a channel
+#    match_against_nicklist: 
+#      Fix wrong comparison.
+#      Optimize iterating through the nicklist by not constantly reperforming some 
+#        calculations, and instead storing them into boolean values.   
+#    Code formatting fixes
 
 try:
     import weechat as w
@@ -128,7 +135,7 @@ except ImportError:
 
 SCRIPT_NAME = "maskmatch"
 SCRIPT_AUTHOR = "Zarthus <zarthus@zarth.us>"
-SCRIPT_VERSION = "1.0"
+SCRIPT_VERSION = "1.1"
 SCRIPT_LICENSE = "MIT"
 SCRIPT_DESC = "Display who got banned (quieted, excepted, etc.) when a mode with a hostmask argument is set"
 SCRIPT_COMMAND = "maskmatch"
@@ -137,7 +144,17 @@ SCRIPT_COMMAND = "maskmatch"
 def cmd_maskmatch(data, buffer, mask):
     """Trigger for /maskmatch <hostmask>"""
 
-    server, channel = w.buffer_get_string(buffer, "name").split(".", 1)
+    is_channel = False
+    try:
+        server, channel = w.buffer_get_string(buffer, "name").split(".", 1)
+        is_channel = True
+    except ValueError:
+        is_channel = False
+        w.prnt(buffer, "error: Active buffer does not appear to be a channel.")
+    
+    if not is_channel:
+        return w.WEECHAT_RC_OK
+    
     matches = match_against_nicklist(server, channel, mask)
 
     print_matches(buffer, matches, {"setter": "maskmatch", "mode": "special", "set": True, "mask": mask})
@@ -197,6 +214,7 @@ def match_mode(server, channel, data):
     print_matches(target, matches, data)
 
     return True
+
 
 def parse_modes(text):
     """Go through the mode string (+bbb arg1 arg2 arg3) and split them up, discarding unsupported modes"""
@@ -279,20 +297,25 @@ def match_against_nicklist(server, channel, hostmask):
 
     if "$a:" in hostmask or "$~a" in hostmask:
         field = "account"
+        hostmask = hostmask.replace("$a:", "")
+        hostfield = False
     else:
         field = "host"
+        hostfield = True
 
+    extban_unreg = hostmask == "$~a"
     matches = []
 
     while w.infolist_next(infolist):
         name = w.infolist_string(infolist, "name")
 
-        if field == "host":
+        if hostfield:
             host = name + "!" + w.infolist_string(infolist, field)
         else:
             host = w.infolist_string(infolist, field)
 
-        if (hostmask == "$~a" and host == "*") or (field != "$~a" and w.string_match(host, hostmask.replace("$a:", ""), 0)):
+        if ((extban_unreg and host == "*") or 
+            (not extban_unreg and w.string_match(host, hostmask, 0))):
             matches.append(name)
 
     w.infolist_free(infolist)
