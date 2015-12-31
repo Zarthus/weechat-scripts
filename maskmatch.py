@@ -137,7 +137,7 @@ except ImportError:
 
 SCRIPT_NAME = "maskmatch"
 SCRIPT_AUTHOR = "Zarthus <zarthus@zarth.us>"
-SCRIPT_VERSION = "1.1"
+SCRIPT_VERSION = "1.2"
 SCRIPT_LICENSE = "MIT"
 SCRIPT_DESC = "Display who got banned (quieted, excepted, etc.) when a mode with a hostmask argument is set"
 SCRIPT_COMMAND = "maskmatch"
