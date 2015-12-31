@@ -123,6 +123,8 @@
 #      Optimize iterating through the nicklist by not constantly reperforming some 
 #        calculations, and instead storing them into boolean values.   
 #    Code formatting fixes
+#  version 1.2 - 2015-12-31
+#    bug fix: Add missing parenthesis to ensure proper .format() calls.
 
 try:
     import weechat as w
@@ -358,7 +360,7 @@ def print_as_list(target, matches, data, limit, total):
     if data["mode"] == "special":
         w.prnt(target, s.format(pf, "nick matches" if total == 1 else "nicks match", fmt_banmask(data["mask"])))
     else:
-        w.prnt(target, s + ", {} by {}{}{}".format(
+        w.prnt(target, (s + ", {} by {}{}{}").format(
            pf, "nick matches" if total == 1 else "nicks match",
            fmt_banmask(data["mask"]), fmt_mode_char(data["mode"]), col,
            data["setter"], w.color("reset")
