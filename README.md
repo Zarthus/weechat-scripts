@@ -11,6 +11,9 @@ This repository contains all my WeeChat scripts.
     to see if it matches anyone, and lists them accordingly. Also allows you to compare people who would be affected
     by a ban with `/maskmatch <hostmask>`.
 
+- [quickbuffer.py](quickbuffer.py)
+  - Navigate to different buffers using `/<number>`
+
 - [whowas_timeago.py](whowas_timeago.py)
   - Extract the date from WHOWAS and inform the user of how long ago this roughly was.
 
