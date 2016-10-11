@@ -303,7 +303,7 @@ def is_maskmatch_mask(mask):
     # this, this statement could be replaced with a regex
     # that is more accurate. /\$~a|\$a:[^ ]+|[^! ]+![^@ ]+@/ or the likes.
 
-    return "$a" in mask or ("!" in mask and "@" in mask)
+    return "$~a" in mask or "$a:" in mask or ("!" in mask and "@" in mask)
 
 
 def is_mask_ignored(mask):
