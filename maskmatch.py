@@ -141,6 +141,9 @@
 #      and instead maskmatch starts matching against the wrong argument.
 #      This is a bit of a cheesy hack. Anyone is welcome to improve the logic on this.
 #      relevant: https://github.com/Zarthus/weechat-scripts/issues/3
+#  version 1.5 - 2017-02-24
+#    bug fix: Fixes a python error regarding array indexes being out of bounds in certain
+#      scenarios.
 
 try:
     import weechat as w
@@ -153,7 +156,7 @@ except ImportError:
 
 SCRIPT_NAME = "maskmatch"
 SCRIPT_AUTHOR = "Zarthus <zarthus@lovebytes.me>"
-SCRIPT_VERSION = "1.4"
+SCRIPT_VERSION = "1.5"
 SCRIPT_LICENSE = "MIT"
 SCRIPT_DESC = "Display who got banned (quieted, excepted, etc.) when a mode with a hostmask argument is set"
 SCRIPT_COMMAND = "maskmatch"
@@ -251,7 +254,7 @@ def parse_modes(text):
             continue
 
         if c not in chars:
-            if c in ["I", "k", "e", "b", "q"] or not is_maskmatch_mask(masks[i]):  # TODO: look in isupport CHANMODES and PREFIX
+            if c in ["I", "k", "e", "b", "q"] or (i in masks and not is_maskmatch_mask(masks[i])):  # TODO: look in isupport CHANMODES and PREFIX
                 del masks[i]
             continue
 
